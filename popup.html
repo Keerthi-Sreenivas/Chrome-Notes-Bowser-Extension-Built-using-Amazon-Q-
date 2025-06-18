@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome Notes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Chrome Notes</h1>
+      <div class="controls">
+        <button id="newNote" title="Create new note">+</button>
+        <input type="text" id="searchNotes" placeholder="Search notes...">
+        <button id="settingsBtn" title="Settings">⚙️</button>
+      </div>
+    </header>
+    
+    <div class="categories">
+      <select id="categoryFilter">
+        <option value="all">All Categories</option>
+        <option value="work">Work</option>
+        <option value="personal">Personal</option>
+        <option value="study">Study</option>
+        <option value="other">Other</option>
+      </select>
+      <button id="addCategory" title="Add category">+</button>
+    </div>
+    
+    <div id="notesList" class="notes-list">
+      <!-- Notes will be dynamically inserted here -->
+      <div class="empty-state">
+        <p>No notes yet. Click the + button to create your first note!</p>
+      </div>
+    </div>
+    
+    <div id="noteEditor" class="note-editor hidden">
+      <input type="text" id="noteTitle" placeholder="Note title">
+      <div class="editor-toolbar">
+        <button data-format="bold" title="Bold">B</button>
+        <button data-format="italic" title="Italic">I</button>
+        <button data-format="underline" title="Underline">U</button>
+        <button data-format="list" title="List">•</button>
+      </div>
+      <textarea id="noteContent" placeholder="Start typing your note here..."></textarea>
+      <div class="note-meta">
+        <select id="noteCategory">
+          <option value="work">Work</option>
+          <option value="personal">Personal</option>
+          <option value="study">Study</option>
+          <option value="other">Other</option>
+        </select>
+        <input type="text" id="noteTags" placeholder="Add tags (comma separated)">
+      </div>
+      <div class="note-actions">
+        <button id="saveNote">Save</button>
+        <button id="cancelNote">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
