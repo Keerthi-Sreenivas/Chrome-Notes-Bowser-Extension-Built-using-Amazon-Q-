@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome Notes - Options</title>
+  <style>
+    body {
+      font-family: 'Roboto', Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #202124;
+    }
+    
+    h1 {
+      color: #4285f4;
+      border-bottom: 1px solid #dadce0;
+      padding-bottom: 10px;
+    }
+    
+    .option-group {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+    }
+    
+    .option-group h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    
+    label {
+      display: block;
+      margin: 10px 0;
+    }
+    
+    input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    
+    select, input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0 15px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+    }
+    
+    button {
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    .button-group {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+    }
+    
+    .danger {
+      background-color: #ea4335;
+    }
+    
+    .danger:hover {
+      background-color: #d33426;
+    }
+    
+    .success-message {
+      background-color: #34a853;
+      color: white;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Chrome Notes - Settings</h1>
+  
+  <div id="successMessage" class="success-message">Settings saved successfully!</div>
+  
+  <div class="option-group">
+    <h2>Appearance</h2>
+    <label>
+      <input type="checkbox" id="darkMode"> Enable Dark Mode
+    </label>
+    
+    <label for="fontSize">Font Size</label>
+    <select id="fontSize">
+      <option value="small">Small</option>
+      <option value="medium" selected>Medium</option>
+      <option value="large">Large</option>
+    </select>
+    
+    <label for="fontFamily">Font Family</label>
+    <select id="fontFamily">
+      <option value="Roboto, sans-serif" selected>Roboto</option>
+      <option value="Arial, sans-serif">Arial</option>
+      <option value="Georgia, serif">Georgia</option>
+      <option value="Courier New, monospace">Courier New</option>
+    </select>
+  </div>
+  
+  <div class="option-group">
+    <h2>Storage & Sync</h2>
+    <label>
+      <input type="checkbox" id="syncEnabled" checked> Enable Sync Across Devices
+    </label>
+    <p><small>When enabled, your notes will be synced across all devices where you're signed in to Chrome.</small></p>
+    
+    <label for="maxNotes">Maximum Notes to Store</label>
+    <input type="number" id="maxNotes" min="10" max="1000" value="100">
+    <p><small>Older notes will be archived when this limit is reached.</small></p>
+  </div>
+  
+  <div class="option-group">
+    <h2>Backup & Export</h2>
+    <button id="exportBtn">Export All Notes</button>
+    <p><small>Download all your notes as a JSON file for backup.</small></p>
+    
+    <label for="importFile">Import Notes</label>
+    <input type="file" id="importFile" accept=".json">
+    <p><small>Import notes from a previously exported JSON file.</small></p>
+  </div>
+  
+  <div class="option-group">
+    <h2>Advanced</h2>
+    <label>
+      <input type="checkbox" id="contextMenu" checked> Enable Right-Click Context Menu
+    </label>
+    <p><small>Allows you to quickly create notes from selected text on any webpage.</small></p>
+    
+    <label>
+      <input type="checkbox" id="notifications" checked> Enable Notifications
+    </label>
+    <p><small>Show notifications when notes are created or for reminders.</small></p>
+  </div>
+  
+  <div class="button-group">
+    <button id="saveBtn">Save Settings</button>
+    <button id="resetBtn" class="danger">Reset to Defaults</button>
+  </div>
+  
+  <script src="options.js"></script>
+</body>
+</html>
