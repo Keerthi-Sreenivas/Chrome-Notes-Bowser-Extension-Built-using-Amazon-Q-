@@ -1,231 +1,122 @@
-// Chrome Notes Extension - Main Functionality
+'use strict';
 
 document.addEventListener('DOMContentLoaded', function() {
-  // DOM Elements
-  const newNoteBtn = document.getElementById('newNote');
-  const notesList = document.getElementById('notesList');
-  const noteEditor = document.getElementById('noteEditor');
-  const noteTitleInput = document.getElementById('noteTitle');
-  const noteContentInput = document.getElementById('noteContent');
-  const saveNoteBtn = document.getElementById('saveNote');
-  const cancelNoteBtn = document.getElementById('cancelNote');
-  const searchInput = document.getElementById('searchNotes');
-  const categoryFilter = document.getElementById('categoryFilter');
-  const noteCategorySelect = document.getElementById('noteCategory');
-  const noteTagsInput = document.getElementById('noteTags');
-  const settingsBtn = document.getElementById('settingsBtn');
-  const addCategoryBtn = document.getElementById('addCategory');
+    const noteInput = document.getElementById('noteInput');
+    const saveButton = document.getElementById('saveButton');
+    const noteHistory = document.getElementById('noteHistory');
 
-  // State
-  let notes = [];
-  let currentNoteId = null;
-  let isEditing = false;
+    // Load note history when popup opens
+    loadNoteHistory();
 
-  // Initialize
-  loadNotes();
+    /**
+     * Saves the current note with a timestamp
+     */
+    function saveNote() {
+        if (noteInput.value.trim() !== '') {
+            const date = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const formattedDate = date.toLocaleDateString('en-US', options);
+            const noteContent = noteInput.value.trim();
+            const noteWithDate = `${formattedDate} ${noteContent}\n`;
 
-  // Event Listeners
-  newNoteBtn.addEventListener('click', createNewNote);
-  saveNoteBtn.addEventListener('click', saveNote);
-  cancelNoteBtn.addEventListener('click', closeEditor);
-  searchInput.addEventListener('input', filterNotes);
-  categoryFilter.addEventListener('change', filterNotes);
-  addCategoryBtn.addEventListener('click', addNewCategory);
-  settingsBtn.addEventListener('click', openSettings);
+            // Create a Blob with the note content
+            const blob = new Blob([noteWithDate], {type: 'text/plain'});
+            
+            // Save the file
+            const url = URL.createObjectURL(blob);
+            chrome.downloads.download({
+                url: url,
+                filename: 'rough_notes.txt',
+                saveAs: false
+            });
 
-  // Functions
-  function loadNotes() {
-    chrome.storage.sync.get(['notes'], function(result) {
-      if (result.notes) {
-        notes = result.notes;
-        renderNotes();
-      } else {
-        // First time use - no notes yet
-        notesList.querySelector('.empty-state').style.display = 'flex';
-      }
+            // Save to history
+            saveToHistory(formattedDate, noteContent);
+            
+            noteInput.value = '';
+        }
+    }
+
+    /**
+     * Saves a note to the history storage
+     * @param {string} date - Formatted date string
+     * @param {string} content - Note content
+     */
+    function saveToHistory(date, content) {
+        // Get existing history
+        chrome.storage.local.get(['noteHistory'], function(result) {
+            let history = result.noteHistory || [];
+            
+            // Add new note to the beginning of the array
+            history.unshift({
+                date: date,
+                content: content,
+                timestamp: new Date().getTime()
+            });
+            
+            // Keep only the last 5 notes
+            if (history.length > 5) {
+                history = history.slice(0, 5);
+            }
+            
+            // Save updated history
+            chrome.storage.local.set({noteHistory: history}, function() {
+                // Update the displayed history
+                displayNoteHistory(history);
+            });
+        });
+    }
+
+    /**
+     * Loads note history from storage
+     */
+    function loadNoteHistory() {
+        chrome.storage.local.get(['noteHistory'], function(result) {
+            const history = result.noteHistory || [];
+            displayNoteHistory(history);
+        });
+    }
+
+    /**
+     * Displays the note history in the UI
+     * @param {Array} history - Array of note history objects
+     */
+    function displayNoteHistory(history) {
+        // Clear current history display
+        noteHistory.innerHTML = '';
+        
+        if (history.length === 0) {
+            noteHistory.innerHTML = '<p class="no-history">No recent notes</p>';
+            return;
+        }
+        
+        // Add each note to the history section
+        history.forEach(function(note) {
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            const dateElement = document.createElement('div');
+            dateElement.className = 'history-date';
+            dateElement.textContent = note.date;
+            
+            const contentElement = document.createElement('div');
+            contentElement.className = 'history-content';
+            contentElement.textContent = note.content;
+            
+            historyItem.appendChild(dateElement);
+            historyItem.appendChild(contentElement);
+            noteHistory.appendChild(historyItem);
+        });
+    }
+
+    // Save on button click
+    saveButton.addEventListener('click', saveNote);
+
+    // Save on Enter key press
+    noteInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            saveNote();
+        }
     });
-  }
-
-  function renderNotes(filteredNotes = null) {
-    const notesToRender = filteredNotes || notes;
-    
-    // Clear the list
-    notesList.innerHTML = '';
-    
-    if (notesToRender.length === 0) {
-      const emptyState = document.createElement('div');
-      emptyState.className = 'empty-state';
-      emptyState.innerHTML = '<p>No notes found. Click the + button to create a new note!</p>';
-      notesList.appendChild(emptyState);
-      return;
-    }
-    
-    // Sort notes by last modified date (newest first)
-    const sortedNotes = [...notesToRender].sort((a, b) => b.lastModified - a.lastModified);
-    
-    // Create note elements
-    sortedNotes.forEach(note => {
-      const noteElement = document.createElement('div');
-      noteElement.className = 'note-item';
-      noteElement.dataset.id = note.id;
-      
-      const title = document.createElement('h3');
-      title.textContent = note.title || 'Untitled Note';
-      
-      const content = document.createElement('p');
-      content.textContent = note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '');
-      
-      const metaInfo = document.createElement('div');
-      metaInfo.className = 'note-meta-info';
-      
-      const category = document.createElement('span');
-      category.textContent = note.category || 'Uncategorized';
-      
-      const date = document.createElement('span');
-      date.textContent = new Date(note.lastModified).toLocaleDateString();
-      
-      metaInfo.appendChild(category);
-      metaInfo.appendChild(date);
-      
-      noteElement.appendChild(title);
-      noteElement.appendChild(content);
-      noteElement.appendChild(metaInfo);
-      
-      // Add click event to open note
-      noteElement.addEventListener('click', () => openNote(note.id));
-      
-      notesList.appendChild(noteElement);
-    });
-  }
-
-  function createNewNote() {
-    isEditing = false;
-    currentNoteId = Date.now(); // Use timestamp as temporary ID
-    
-    // Clear form
-    noteTitleInput.value = '';
-    noteContentInput.value = '';
-    noteCategorySelect.value = 'other';
-    noteTagsInput.value = '';
-    
-    // Show editor
-    noteEditor.classList.remove('hidden');
-    noteTitleInput.focus();
-  }
-
-  function openNote(id) {
-    const note = notes.find(n => n.id === id);
-    if (!note) return;
-    
-    isEditing = true;
-    currentNoteId = id;
-    
-    // Fill form with note data
-    noteTitleInput.value = note.title || '';
-    noteContentInput.value = note.content || '';
-    noteCategorySelect.value = note.category || 'other';
-    noteTagsInput.value = (note.tags || []).join(', ');
-    
-    // Show editor
-    noteEditor.classList.remove('hidden');
-    noteTitleInput.focus();
-  }
-
-  function saveNote() {
-    const title = noteTitleInput.value.trim();
-    const content = noteContentInput.value.trim();
-    const category = noteCategorySelect.value;
-    const tags = noteTagsInput.value.split(',')
-      .map(tag => tag.trim())
-      .filter(tag => tag.length > 0);
-    
-    if (!content) {
-      alert('Please enter some content for your note.');
-      return;
-    }
-    
-    const note = {
-      id: currentNoteId,
-      title: title || 'Untitled Note',
-      content,
-      category,
-      tags,
-      lastModified: Date.now(),
-      url: isEditing ? notes.find(n => n.id === currentNoteId)?.url : window.location.href
-    };
-    
-    if (isEditing) {
-      // Update existing note
-      const index = notes.findIndex(n => n.id === currentNoteId);
-      if (index !== -1) {
-        notes[index] = note;
-      }
-    } else {
-      // Add new note
-      notes.push(note);
-    }
-    
-    // Save to storage
-    chrome.storage.sync.set({ notes }, function() {
-      closeEditor();
-      renderNotes();
-    });
-  }
-
-  function closeEditor() {
-    noteEditor.classList.add('hidden');
-    currentNoteId = null;
-    isEditing = false;
-  }
-
-  function filterNotes() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const categoryValue = categoryFilter.value;
-    
-    let filtered = notes;
-    
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(note => 
-        note.title.toLowerCase().includes(searchTerm) || 
-        note.content.toLowerCase().includes(searchTerm) ||
-        (note.tags && note.tags.some(tag => tag.toLowerCase().includes(searchTerm)))
-      );
-    }
-    
-    // Filter by category
-    if (categoryValue !== 'all') {
-      filtered = filtered.filter(note => note.category === categoryValue);
-    }
-    
-    renderNotes(filtered);
-  }
-
-  function addNewCategory() {
-    const newCategory = prompt('Enter a new category name:');
-    if (!newCategory || newCategory.trim() === '') return;
-    
-    const categoryName = newCategory.trim();
-    
-    // Add to category filter dropdown
-    const option = document.createElement('option');
-    option.value = categoryName.toLowerCase();
-    option.textContent = categoryName;
-    categoryFilter.appendChild(option);
-    
-    // Add to note category dropdown
-    const noteOption = document.createElement('option');
-    noteOption.value = categoryName.toLowerCase();
-    noteOption.textContent = categoryName;
-    noteCategorySelect.appendChild(noteOption);
-  }
-
-  function openSettings() {
-    // For now, just open the options page
-    if (chrome.runtime.openOptionsPage) {
-      chrome.runtime.openOptionsPage();
-    } else {
-      window.open(chrome.runtime.getURL('options.html'));
-    }
-  }
 });

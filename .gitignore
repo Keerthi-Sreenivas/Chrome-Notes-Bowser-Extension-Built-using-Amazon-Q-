@@ -1,0 +1,16 @@
+# Node modules
+node_modules/
+
+# Build files
+extension.zip
+
+# IDE files
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
