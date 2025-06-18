@@ -21,7 +21,6 @@ This extension focuses on simplicity and efficiency, offering a streamlined note
 ## Repository Structure
 ```
 .
-├── devfile.yaml          # Development environment configuration for containerized development
 ├── manifest.json         # Chrome extension manifest defining permissions and metadata
 ├── popup.html           # Main extension UI interface
 ├── popup.js             # Core extension logic for note saving functionality
